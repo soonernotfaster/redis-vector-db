@@ -1,14 +1,25 @@
-import os
-from bs4 import BeautifulSoup
+import json
+import time
 
-FILENAME = "../soonernotfaster/content/posts/writing-maybe-in-ruby-lessons-learned.md"
+import numpy as np
+import pandas as pd
+import requests
+import redis
+from redis.commands.search.field import (
+    NumericField,
+    TagField,
+    TextField,
+    VectorField
+)
+from redis.commands.search.indexDefinition import IndexDefinition, IndexType
+from redis.commands.search.query import Query
+from sentence_transformers import SentenceTransformer
+
+client = redis.Redis(host="localhost", port=6379, decode_responses=True)
+
+
 def main() -> None:
-    lines = None
-    abs_filepath = os.path.abspath(FILENAME)
-    with open(abs_filepath, "r") as f:
-        lines = f.readlines()
-
-    print(lines)
+    print(client)
 
 
 if __name__ == "__main__":
