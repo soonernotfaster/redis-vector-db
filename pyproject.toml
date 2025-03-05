@@ -8,5 +8,6 @@ dependencies = [
     "beautifulsoup4>=4.13.3",
     "markdown>=3.7",
     "pandas>=2.2.3",
+    "redis>=5.2.1",
     "torch>=2.6.0",
 ]
