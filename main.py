@@ -15,6 +15,9 @@ from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.query import Query
 from sentence_transformers import SentenceTransformer
 
+client = redis.Redis(host="localhost",
+                     port=6379, decode_responses=True)
+
 
 def download_data() -> list[dict]:
     URL = (
@@ -26,9 +29,25 @@ def download_data() -> list[dict]:
     return response.json()
 
 
+def embed_descriptions() -> None:
+    embedder = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+    keys = client.keys("bikes:*")
+
+    descriptions = [item for sublist in client.json().mget(
+        keys, "$.description") for item in sublist]
+
+    def embed_it(desc):
+        return embedder.encode(desc).astype(np.float32).tolist()
+
+    embeddings = [embed_it(desc) for desc in descriptions]
+
+    pipe = client.pipeline()
+    for key, embedding in zip(keys, embeddings):
+        pipe.json().set(key, "$.description_embedding", embedding)
+    pipe.execute()
+
+
 def seed_redis(data: list[dict]) -> None:
-    client = redis.Redis(host="localhost",
-                         port=6379, decode_responses=True)
     print("data seeding")
     pipe = client.pipeline()
     for i, bike in enumerate(data, start=1):
@@ -40,9 +59,11 @@ def seed_redis(data: list[dict]) -> None:
 
 
 def main() -> None:
-    data = download_data()
-    seed_redis(data)
-    # print(client)
+    # data = download_data()
+    # seed_redis(data)
+    embed_descriptions()
+    res = client.json().get("bikes:010")
+    print(res)
 
 
 if __name__ == "__main__":
