@@ -31,7 +31,9 @@ def download_data() -> list[dict]:
 
 def embed_descriptions() -> None:
     embedder = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-    keys = client.keys("bikes:*")
+
+    # Sorting keys can improve performance with pipelining
+    keys = sorted(client.keys("bikes:*"))
 
     descriptions = [item for sublist in client.json().mget(
         keys, "$.description") for item in sublist]
