@@ -29,16 +29,14 @@ def download_data() -> list[dict]:
 def seed_redis(data: list[dict]) -> None:
     client = redis.Redis(host="localhost",
                          port=6379, decode_responses=True)
-    print(client)
-    client.set("test", "secret-foo")
-    # print(client.get("test"))
-    # pipe = client.pipeline()
-    # for i, bike in enumerate(data, start=1):
-    #     redis_key = f"bikes:{i:03}"
-    #     pipe.json().set(redis_key, "$", bike)
-    # res = pipe.execute()
-
-    # print(res)
+    print("data seeding")
+    pipe = client.pipeline()
+    for i, bike in enumerate(data, start=1):
+        redis_key = f"bikes:{i:03}"
+        print("key", redis_key)
+        pipe.json().set(redis_key, "$", bike)
+    res = pipe.execute()
+    print(res)
 
 
 def main() -> None:
