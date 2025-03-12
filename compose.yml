@@ -3,4 +3,4 @@ services:
     container_name: redis_db
     ports:
       - 6379:6379
-    image: redis/redis-stack:6.2.6-v19-x86_64
+    image: redis/redis-stack:6.2.6-v19
