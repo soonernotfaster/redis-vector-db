@@ -117,6 +117,7 @@ def query():
         "Comfortable city bike",
     ]
 
+    # It is really easy to miss that a field alias was added in the add_index function
     query = (
         Query(f'(*)=>[KNN 3 @{FIELD_ALIAS} $query_vector AS vector_score]')
         .sort_by('vector_score', asc=False)
