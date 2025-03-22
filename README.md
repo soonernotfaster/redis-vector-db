@@ -13,3 +13,5 @@ This repo uses the [Scripts to Rule Them All](https://github.blog/engineering/sc
 1. Clone the repo
 1. Open the repo using the "Dev Containers: Open Folder in Container" command in VS Code
 1. Run the code by executing `./script/run.sh`
+
+N.B. On your first run, the script will need to download the embedding model
