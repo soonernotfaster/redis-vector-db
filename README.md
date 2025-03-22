@@ -4,10 +4,10 @@ This code is based off of Redis' [Vector Database Tutorial](https://redis.io/doc
 
 ## Developer setup
 
-We will use a `devcontainer`, but to save you money will run it locally using Docker.
+We will use a `devcontainer`, but to save you money I will walk you through running it locally using Docker.
 
 This repo uses the [Scripts to Rule Them All](https://github.blog/engineering/scripts-to-rule-them-all/) pattern, where applicable.
-`uv` dependencies are installed on container start.
+This allows `uv` dependencies to instal on container start.
 
 1. In VS Code install [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 1. Clone the repo
