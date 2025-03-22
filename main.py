@@ -131,9 +131,13 @@ def query():
 def are_bikes_setup() -> bool:
     """Searches if last bike is present and has an embedding of the expected dimension"""
     result = client.json().get("bikes:011", "$.description_embeddings")
-    is_present = result is not None
-    is_shape = np.shape(result[0]) == (VECTOR_DIMENSION,)
-    return is_present and is_shape
+
+    is_present = len(result) > 0
+    if is_present:
+        is_shape = np.shape(result[0]) == (VECTOR_DIMENSION,)
+        return is_shape
+
+    return False  # length missing
 
 
 def main() -> None:
