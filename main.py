@@ -62,10 +62,12 @@ def seed_redis(data: list[dict]) -> None:
 
 def add_index():
     index_name = "idx:bikes_vss"
+
+    # Hack to delete index if it exists
     try:
         client.ft(index_name).dropindex()
     except:
-        pass
+        pass  # noop
 
     pipe = client.pipeline()
     pipe.ft(index_name) \
