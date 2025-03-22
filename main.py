@@ -60,12 +60,44 @@ def seed_redis(data: list[dict]) -> None:
     print(res)
 
 
+def add_index():
+    index_name = "idx:bikes_vss"
+    try:
+        client.ft(index_name).dropindex()
+    except:
+        pass
+
+    pipe = client.pipeline()
+    pipe.ft(index_name) \
+        .create_index(
+            (
+                TextField("model"),
+                TextField("brand"),
+                NumericField("price"),
+                TagField("$.type"),
+                TextField("$.description"),
+                VectorField("$.description_embedding", "FLAT",
+                            {
+                                "TYPE": "FLOAT32",
+                                "DIM": "384",
+                                "DISTANCE_METRIC": "COSINE"
+                            })
+            ),
+            definition=IndexDefinition(
+                prefix=["bikes:"], index_type=IndexType.JSON),
+    )
+    res = pipe.execute()
+
+    print(res)
+
+
 def main() -> None:
     data = download_data()
     seed_redis(data)
     embed_descriptions()
     res = client.json().get("bikes:010")
     print(res)
+    add_index()
 
 
 if __name__ == "__main__":
