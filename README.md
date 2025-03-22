@@ -1,7 +1,6 @@
-# Site Search
+# Redis as Vector Database 
 
-I wanted to show how to build both a RAG and Semantic search feature for my blog. This will utilize my experience at GitHub building AI and ML systems to aid customers in detecting their problems.
-
+This code is based off of Redis' [Vector Database Tutorial](https://redis.io/docs/latest/develop/get-started/vector-database/). I am using this as a spike to determine if Redis is the right tool for a site search and/or a data source for RAG.
 
 ## Developer setup
 
