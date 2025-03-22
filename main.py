@@ -15,11 +15,18 @@ from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.query import Query
 from sentence_transformers import SentenceTransformer
 
+VECTOR_DIMENSION = 768
+FIELD_ALIAS = "vector"
+INDEX_NAME = "idx:bikes_vss"
+
 client = redis.Redis(host="localhost",
                      port=6379, decode_responses=True)
 
+embedder = SentenceTransformer("msmarco-distilbert-base-v4")
+
 
 def download_data() -> list[dict]:
+    """Downloads sample data about bikes"""
     URL = (
         "https://raw.githubusercontent.com/bsbodden/redis_vss_getting_started"
         "/main/data/bikes.json"
@@ -29,12 +36,9 @@ def download_data() -> list[dict]:
     return response.json()
 
 
-embedder = SentenceTransformer("msmarco-distilbert-base-v4")
-VECTOR_DIMENSION = 768
-FIELD_ALIAS = "vector"
-
-
 def embed_descriptions() -> None:
+    """Create embeddings for all bike descriptions"""
+
     # Sorting keys can improve performance with pipelining
     keys = sorted(client.keys("bikes:*"))
 
@@ -50,6 +54,7 @@ def embed_descriptions() -> None:
 
 
 def seed_redis(data: list[dict]) -> None:
+    """Sets up bike data in Redis"""
     print("data seeding")
     pipe = client.pipeline()
     for i, bike in enumerate(data, start=1):
@@ -61,16 +66,19 @@ def seed_redis(data: list[dict]) -> None:
 
 
 def add_index():
-    index_name = "idx:bikes_vss"
+    """
+    Add index for bike documents.
 
+    This adds way more indices than needed to demo the vector search capability.
+    """
     # Hack to delete index if it exists
     try:
-        client.ft(index_name).dropindex()
+        client.ft(INDEX_NAME).dropindex()
     except:
         pass  # noop
 
     pipe = client.pipeline()
-    pipe.ft(index_name) \
+    pipe.ft(INDEX_NAME) \
         .create_index(
             (
                 TextField("$.model", no_stem=True, as_name="model"),
