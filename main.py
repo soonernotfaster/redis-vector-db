@@ -29,9 +29,11 @@ def download_data() -> list[dict]:
     return response.json()
 
 
-def embed_descriptions() -> None:
-    embedder = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+embedder = SentenceTransformer("msmarco-distilbert-base-v4")
+VECTOR_DIMENSION = 768
 
+
+def embed_descriptions() -> None:
     # Sorting keys can improve performance with pipelining
     keys = sorted(client.keys("bikes:*"))
 
@@ -71,23 +73,56 @@ def add_index():
     pipe.ft(index_name) \
         .create_index(
             (
-                TextField("model"),
-                TextField("brand"),
-                NumericField("price"),
-                TagField("$.type"),
-                TextField("$.description"),
-                VectorField("$.description_embedding", "FLAT",
-                            {
-                                "TYPE": "FLOAT32",
-                                "DIM": "384",
-                                "DISTANCE_METRIC": "COSINE"
-                            })
+                TextField("$.model", no_stem=True, as_name="model"),
+                TextField("$.brand", no_stem=True, as_name="brand"),
+                NumericField("$.price", as_name="price"),
+                TagField("$.type", as_name="type"),
+                TextField("$.description", as_name="description"),
+                VectorField(
+                    "$.description_embeddings",
+                    "FLAT",
+                    {
+                        "TYPE": "FLOAT32",
+                        "DIM": VECTOR_DIMENSION,
+                        "DISTANCE_METRIC": "COSINE",
+                    },
+                    as_name="vector",
+                ),
             ),
             definition=IndexDefinition(
                 prefix=["bikes:"], index_type=IndexType.JSON),
     )
     res = pipe.execute()
 
+    print(res)
+
+
+def query():
+    queries = [
+        "Bike for small kids",
+        "Best Mountain bikes for kids",
+        "Cheap Mountain bike for kids",
+        "Female specific mountain bike",
+        "Road bike for beginners",
+        "Commuter bike for people over 60",
+        "Comfortable commuter bike",
+        "Good bike for college students",
+        "Mountain bike for beginners",
+        "Vintage bike",
+        "Comfortable city bike",
+    ]
+
+    def embed_it(desc):
+        return embedder.encode(desc).astype(np.float32).tolist()
+
+    query = (
+        Query("*=>[KNN 3 @embedding $query_vector AS vector_distance]")
+        .return_fields('score', 'id', 'brand', 'model', 'description')
+        .dialect(2)
+    )
+    print("embedding", np.array(embed_it("bike for young at heart")))
+    res = client.ft("idx:bikes_vss").search(
+        query, {"query_vector": np.array(embed_it("Cheap Mountain bike for kids")).tobytes()}).docs
     print(res)
 
 
@@ -98,6 +133,7 @@ def main() -> None:
     res = client.json().get("bikes:010")
     print(res)
     add_index()
+    query()
 
 
 if __name__ == "__main__":
