@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    // Required based on https://github.com/vitejs/vite/issues/16522
     host: '127.0.0.1'
   }
 })
