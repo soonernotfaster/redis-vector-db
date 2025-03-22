@@ -61,8 +61,8 @@ def seed_redis(data: list[dict]) -> None:
 
 
 def main() -> None:
-    # data = download_data()
-    # seed_redis(data)
+    data = download_data()
+    seed_redis(data)
     embed_descriptions()
     res = client.json().get("bikes:010")
     print(res)
