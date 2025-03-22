@@ -4,7 +4,7 @@ This code is based off of Redis' [Vector Database Tutorial](https://redis.io/doc
 
 ## Developer setup
 
-Use a devcontainer, but don't run it in the cloud. Run it locally in Docker.
+We will use a `devcontainer`, but to save you money will run it locally using Docker.
 
 This repo uses the [Scripts to Rule Them All](https://github.blog/engineering/scripts-to-rule-them-all/) pattern, where applicable.
 `uv` dependencies are installed on container start.
