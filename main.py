@@ -31,23 +31,21 @@ def download_data() -> list[dict]:
 
 embedder = SentenceTransformer("msmarco-distilbert-base-v4")
 VECTOR_DIMENSION = 768
+FIELD_ALIAS = "vector"
 
 
 def embed_descriptions() -> None:
     # Sorting keys can improve performance with pipelining
     keys = sorted(client.keys("bikes:*"))
 
-    descriptions = [item for sublist in client.json().mget(
-        keys, "$.description") for item in sublist]
-
-    def embed_it(desc):
-        return embedder.encode(desc).astype(np.float32).tolist()
-
-    embeddings = [embed_it(desc) for desc in descriptions]
+    descriptions = client.json().mget(keys, "$.description")
+    descriptions = [item for sublist in descriptions for item in sublist]
+    embedder = SentenceTransformer("msmarco-distilbert-base-v4")
+    embeddings = embedder.encode(descriptions).astype(np.float32).tolist()
 
     pipe = client.pipeline()
     for key, embedding in zip(keys, embeddings):
-        pipe.json().set(key, "$.description_embedding", embedding)
+        pipe.json().set(key, "$.description_embeddings", embedding)
     pipe.execute()
 
 
@@ -86,7 +84,7 @@ def add_index():
                         "DIM": VECTOR_DIMENSION,
                         "DISTANCE_METRIC": "COSINE",
                     },
-                    as_name="vector",
+                    as_name=FIELD_ALIAS,
                 ),
             ),
             definition=IndexDefinition(
@@ -112,27 +110,28 @@ def query():
         "Comfortable city bike",
     ]
 
-    def embed_it(desc):
-        return embedder.encode(desc).astype(np.float32).tolist()
-
     query = (
-        Query("*=>[KNN 3 @embedding $query_vector AS vector_distance]")
-        .return_fields('score', 'id', 'brand', 'model', 'description')
+        Query(f'(*)=>[KNN 3 @{FIELD_ALIAS} $query_vector AS vector_score]')
+        .sort_by('vector_score', asc=False)
+        .return_fields('vector_score', 'id', 'brand', 'model', 'description')
         .dialect(2)
     )
-    print("embedding", np.array(embed_it("bike for young at heart")))
-    res = client.ft("idx:bikes_vss").search(
-        query, {"query_vector": np.array(embed_it("Cheap Mountain bike for kids")).tobytes()}).docs
+    encoded_query = embedder.encode(queries[0])
+    print(np.shape(np.array(encoded_query, dtype=np.float32)))
+    res = client.ft('idx:bikes_vss').search(
+        query,
+        {
+            'query_vector': np.array(encoded_query, dtype=np.float32).tobytes()
+        }
+    ).docs
     print(res)
 
 
 def main() -> None:
-    data = download_data()
-    seed_redis(data)
-    embed_descriptions()
-    res = client.json().get("bikes:010")
-    print(res)
-    add_index()
+    # data = download_data()
+    # seed_redis(data)
+    # embed_descriptions()
+    # add_index()
     query()
 
 
