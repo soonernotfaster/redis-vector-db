@@ -117,7 +117,6 @@ def query():
         .dialect(2)
     )
     encoded_query = embedder.encode(queries[0])
-    print(np.shape(np.array(encoded_query, dtype=np.float32)))
     res = client.ft('idx:bikes_vss').search(
         query,
         {
@@ -127,11 +126,21 @@ def query():
     print(res)
 
 
+def are_bikes_setup() -> bool:
+    """Searches if last bike is present and has an embedding of the expected dimension"""
+    result = client.json().get("bikes:011", "$.description_embeddings")
+    is_present = result is not None
+    is_shape = np.shape(result[0]) == (VECTOR_DIMENSION,)
+    return is_present and is_shape
+
+
 def main() -> None:
-    # data = download_data()
-    # seed_redis(data)
-    # embed_descriptions()
-    # add_index()
+    if not are_bikes_setup():
+        print("Fetching data")
+        data = download_data()
+        seed_redis(data)
+        embed_descriptions()
+        add_index()
     query()
 
 
